@@ -39,6 +39,8 @@ describe("Vester unit tests", function() {
     })
 
     it("When creating a stream it increments nextStreamId", async function() {
+      const approve = await token.approve(vester.address, depositAmount)
+      const approveReciept = await approve.wait(1)
       const oldStreamId = await vester.viewNextStreamId()
       const createStream = await vester.createStream(
         tokenAddress,
@@ -54,7 +56,10 @@ describe("Vester unit tests", function() {
     })
 
     it("Creates a stream and saves it properly", async function() {
-    const createStream = await vester.createStream(
+      const approve = await token.approve(vester.address, depositAmount)
+      const approveReciept = await approve.wait(1)
+
+      const createStream = await vester.createStream(
       tokenAddress,
       user,
       startTime,
