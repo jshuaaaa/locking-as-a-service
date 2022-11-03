@@ -20,6 +20,13 @@ module.exports = async function(hre) {
       waitConfirmations: network.config.blockConfirmations || 1
     })
 
+    const token = await deploy("Token", {
+      from: deployer,
+      args: [],
+      log: true,
+      waitConfirmations: network.config.blockConfirmations || 1
+    })
+
     console.log(`Deployed succesfully to${vester.address}`)
 }
 
