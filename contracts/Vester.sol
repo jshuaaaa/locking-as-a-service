@@ -1,7 +1,7 @@
 
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 
 
 error StreamExists();
@@ -23,9 +23,10 @@ contract Vester {
     }
 
     mapping(uint256 => Stream) private streams;
-    
+    //Events
+    event StreamCreated(uint256 streamId);
     // Functions
-    function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public returns (uint256) {
+    function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public {
         uint256 streamId = nextStreamId;
         nextStreamId = nextStreamId + 1;
         streams[streamId] = Stream({
@@ -37,12 +38,34 @@ contract Vester {
             endTime: endTime,
             tokenAddress: tokenAddress,
             ratesPerSecond: 100 // temporary number until we implement function to calculate rates per second
-        })     
+        });
+        emit StreamCreated(streamId);  
     }
 
     function withdrawFromVest() public {}
 
     // View functions
+    function viewNextStreamId() public view returns (uint256) {
+        return nextStreamId;
+    }
+
+    function viewStream(uint256 streamId) public view returns (
+        address user,
+        address sender,
+        uint256 depositAmount,
+        uint256 startTime,
+        uint256 endTime,
+        address tokenAddress,
+        uint256 ratesPerSecond) {
+        
+        user = streams[streamId].user;
+        sender = streams[streamId].sender;
+        depositAmount = streams[streamId].depositAmount;
+        startTime = streams[streamId].startTime;
+        endTime = streams[streamId].endTime;
+        tokenAddress = streams[streamId].tokenAddress;
+        ratesPerSecond = streams[streamId].ratesPerSecond;
+    }
 
 
 }

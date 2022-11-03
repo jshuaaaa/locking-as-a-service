@@ -32,7 +32,7 @@ module.exports = {
         },
         goerli: {
             url: GOERLI,
-            accounts: PRIVATE_KEY !== undefined ? [PRIVATE_KEY] : [],
+            accounts: [PRIVATE_KEY],
             //   accounts: {
             //     mnemonic: MNEMONIC,
             //   },
