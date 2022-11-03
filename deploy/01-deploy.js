@@ -6,7 +6,7 @@
 // global scope, and execute the script.
 const {network, ethers} = require("hardhat")
 
-module.exports = async function(hre) {
+module.exports = async (hre) => {
     const { getNamedAccounts, deployments } = hre;
     const { deploy, log } = deployments;
     const {deployer} = await getNamedAccounts();
@@ -33,3 +33,4 @@ module.exports = async function(hre) {
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 
+module.exports.tags = ["all"]
