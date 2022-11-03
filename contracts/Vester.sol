@@ -11,6 +11,7 @@ error RedeemableBalanceIsLowerThenAmount();
 error AmountIsZero();
 error StartTimePassed();
 error DepositAmountTooLow();
+error ContractCantBeUser();
 
 
 contract Vester {
@@ -36,7 +37,8 @@ contract Vester {
     function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public {
         if(block.timestamp < startTime) revert StartTimePassed();
         if(depositAmount <= 0) revert DepositAmountTooLow();
-
+        if(user == address(this)) revert ContractCantBeUser();
+        
         uint256 streamId = nextStreamId;
         nextStreamId = nextStreamId + 1;
         uint duration = (endTime - startTime);

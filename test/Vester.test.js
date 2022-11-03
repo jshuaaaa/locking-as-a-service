@@ -98,5 +98,56 @@ describe("Vester unit tests", function() {
         depositAmount
       )).to.be.revertedWith("StartTimePassed")
     })
+
+    it("Gets reverted if contract is the user", async function() {
+      const approve = await token.approve(vester.address, depositAmount)
+      const approveReciept = await approve.wait(1)
+      expect(vester.createStream(
+        tokenAddress,
+        vester.address,
+        startTime,
+        endTime,
+        depositAmount
+      )).to.be.revertedWith("ContractCantBeUser")
+    })
   })
+
+  describe('withdrawFromStream', () => {
+    let user, startTime, endTime, depositAmount, vester
+    beforeEach(async function() {
+      vester = await ethers.getContract("Vester", deployer)
+      user = (await getNamedAccounts()).user
+      startTime = 100
+      endTime = 1000
+      depositAmount = "100000"
+
+      const approve = await token.approve(vester.address, depositAmount)
+      const approveReciept = await approve.wait(1)
+
+      const createStream = await vester.createStream(
+      tokenAddress,
+      user,
+      startTime,
+      endTime,
+      depositAmount
+    )
+    await network.provider.send("evm_increaseTime", [150])
+    await network.provider.send("evm_mine", [])
+  });
+
+  it("Only allows user to withdraw", async function() {
+    expect(vester.withdrawFromStream(1,1)).to.be.revertedWith("NotYourStream")
+    })
+  
+
+  it("Withdraws one token from the stream", async function() {
+    const getUser = await ethers.getSigner(user)
+    const connectedUser = vester.connect(getUser)
+    const withdraw = await connectedUser.withdrawFromStream(1,1)
+    const withdrawReciept = await withdraw.wait(1)
+    const tokenBalance = await token.balanceOf(user)
+    assert.equal(tokenBalance.toString(), "1")
+  })
+
+})
 })
