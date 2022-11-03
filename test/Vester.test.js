@@ -52,5 +52,22 @@ describe("Vester unit tests", function() {
       assert.equal(oldStreamId.toString(), "1")
       assert.equal(newStreamId.toString(), "2")
     })
+
+  it("Creates a stream and saves it properly", async function() {
+    const createStream = await vester.createStream(
+      tokenAddress,
+      user,
+      startTime,
+      endTime,
+      depositAmount
+    )
+    const stream = await vester.viewStream("1")
+
+    assert.equal(stream.user, user)
+    assert.equal(stream.tokenAddress, tokenAddress)
+    assert.equal(stream.startTime, startTime)
+    assert.equal(stream.endTime, endTime)
+    assert.equal(stream.depositAmount, depositAmount)
+  })
   })
 })
