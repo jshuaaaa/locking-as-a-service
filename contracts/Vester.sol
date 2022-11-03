@@ -1,11 +1,14 @@
 
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
-// import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 
 error StreamExists();
 error WithdrawAmountToLarge();
+error NotYourStream();
+error RedeemableBalanceIsLowerThenAmount();
+error AmountIsZero();
 
 contract Vester {
     // State variables
@@ -25,6 +28,7 @@ contract Vester {
     mapping(uint256 => Stream) private streams;
     //Events
     event StreamCreated(uint256 streamId);
+    event WithdrawFromStream(uint256 streamId, address user, uint256 amount);
     // Functions
     function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public {
         uint256 streamId = nextStreamId;
@@ -42,9 +46,22 @@ contract Vester {
             ratesPerSecond: ratesPerSecond
         });
         emit StreamCreated(streamId);  
+        IERC20(tokenAddress).transferFrom(msg.sender, address(this), depositAmount);
     }
     
-    function withdrawFromVest() public {}
+    function withdrawFromStream(uint256 streamId, uint amount) public {
+        Stream memory stream = streams[streamId];
+        if(msg.sender != stream.user) revert NotYourStream();
+        uint256 balance = redeemableBalance(streamId);
+        if(amount > balance) revert RedeemableBalanceIsLowerThenAmount();
+        if(amount <= 0) revert AmountIsZero();
+
+        IERC20(stream.tokenAddress).transfer(stream.user, amount);
+        emit WithdrawFromStream(streamId, stream.user, amount);
+
+
+
+    }
 
     // View functions
 
@@ -57,8 +74,8 @@ contract Vester {
 
     function redeemableBalance(uint256 streamId) public view returns (uint256) {
         Stream memory stream = streams[streamId];
-        uint timePassed = timePassed(streamId);
-        return (stream.ratesPerSecond * timePassed);
+        uint _timePassed = timePassed(streamId);
+        return (stream.ratesPerSecond * _timePassed);
     }
 
     function viewNextStreamId() public view returns (uint256) {

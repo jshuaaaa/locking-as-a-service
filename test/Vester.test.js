@@ -69,11 +69,5 @@ describe("Vester unit tests", function() {
     assert.equal(stream.endTime, endTime)
     assert.equal(stream.depositAmount, depositAmount)
     })
-
-    
-  })
-
-  describe("Stream Values", function() {
-    
   })
 })
