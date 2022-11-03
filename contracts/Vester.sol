@@ -29,6 +29,8 @@ contract Vester {
     function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public {
         uint256 streamId = nextStreamId;
         nextStreamId = nextStreamId + 1;
+        uint duration = (endTime - startTime);
+        uint ratesPerSecond = (depositAmount / duration);
         streams[streamId] = Stream({
             streamId: streamId,
             user: user,
@@ -37,14 +39,28 @@ contract Vester {
             startTime: startTime,
             endTime: endTime,
             tokenAddress: tokenAddress,
-            ratesPerSecond: 100 // temporary number until we implement function to calculate rates per second
+            ratesPerSecond: ratesPerSecond
         });
         emit StreamCreated(streamId);  
     }
-
+    
     function withdrawFromVest() public {}
 
     // View functions
+
+    function timePassed(uint256 streamId) public view returns (uint256) {
+        Stream memory stream = streams[streamId];
+        if(block.timestamp <= stream.startTime) return 0;
+        if(block.timestamp < stream.endTime) return block.timestamp - stream.startTime;
+        return stream.endTime - stream.startTime;
+    }
+
+    function redeemableBalance(uint256 streamId) public view returns (uint256) {
+        Stream memory stream = streams[streamId];
+        uint timePassed = timePassed(streamId);
+        return (stream.ratesPerSecond * timePassed);
+    }
+
     function viewNextStreamId() public view returns (uint256) {
         return nextStreamId;
     }
