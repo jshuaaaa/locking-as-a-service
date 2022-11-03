@@ -33,9 +33,9 @@ describe("Vester unit tests", function() {
     beforeEach(async function() {
       vester = await ethers.getContract("Vester", deployer)
       user = (await getNamedAccounts()).user
-      startTime = 100
-      endTime = 1000
-      depositAmount = "100000"
+      startTime = 1
+      endTime = 100
+      depositAmount = 99
     })
 
     it("When creating a stream it increments nextStreamId", async function() {
@@ -117,9 +117,9 @@ describe("Vester unit tests", function() {
     beforeEach(async function() {
       vester = await ethers.getContract("Vester", deployer)
       user = (await getNamedAccounts()).user
-      startTime = 100
-      endTime = 1000
-      depositAmount = 100000
+      startTime = 1
+      endTime = 100
+      depositAmount = 99
 
       const approve = await token.approve(vester.address, depositAmount)
       const approveReciept = await approve.wait(1)
@@ -131,7 +131,7 @@ describe("Vester unit tests", function() {
       endTime,
       depositAmount
     )
-    await network.provider.send("evm_increaseTime", [150])
+    await network.provider.send("evm_increaseTime", [15000])
     await network.provider.send("evm_mine", [])
   });
 
@@ -157,6 +157,20 @@ describe("Vester unit tests", function() {
 
     const viewStream = await vester.viewStream("1")
     assert.equal(viewStream.balance.toString(), (depositAmount - 1).toString())
+  })
+
+  it("Checks that after user withdraws his whole balance, we delete the stream", async function() {
+    await network.provider.send("evm_increaseTime", [150000])
+    await network.provider.send("evm_mine", [])
+    const getUser = await ethers.getSigner(user)
+    const connectedUser = vester.connect(getUser)
+    const redeemable = await vester.viewStream("1")
+    console.log(redeemable.ratesPerSecond.toString())
+    const withdraw = await connectedUser.withdrawFromStream(1,depositAmount)
+    const withdrawReciept = await withdraw.wait(1)
+    const balance = await token.balanceOf(user)
+    expect(vester.viewStream("1")).to.be.revertedWith("StreamDoesntExist")
+    assert.equal(balance.toNumber(), depositAmount)
   })
 
 })
