@@ -33,8 +33,8 @@ describe("Vester unit tests", function() {
     beforeEach(async function() {
       vester = await ethers.getContract("Vester", deployer)
       user = (await getNamedAccounts()).user
-      startTime = 0
-      endTime = 10
+      startTime = 100
+      endTime = 1000
       depositAmount = "100000"
     })
 
@@ -73,6 +73,30 @@ describe("Vester unit tests", function() {
     assert.equal(stream.startTime, startTime)
     assert.equal(stream.endTime, endTime)
     assert.equal(stream.depositAmount, depositAmount)
+    })
+
+    it("Gets reverted when deposit amount is zero", async function() {
+      const approve = await token.approve(vester.address, depositAmount)
+      const approveReciept = await approve.wait(1)
+      expect(vester.createStream(
+        tokenAddress,
+        user,
+        startTime,
+        endTime,
+        0
+      )).to.be.revertedWith("DepositAmountTooLow")
+    })
+
+    it("Gets reverted when start time is zero", async function() {
+      const approve = await token.approve(vester.address, depositAmount)
+      const approveReciept = await approve.wait(1)
+      expect(vester.createStream(
+        tokenAddress,
+        user,
+        0,
+        endTime,
+        depositAmount
+      )).to.be.revertedWith("StartTimePassed")
     })
   })
 })

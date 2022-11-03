@@ -9,6 +9,9 @@ error WithdrawAmountToLarge();
 error NotYourStream();
 error RedeemableBalanceIsLowerThenAmount();
 error AmountIsZero();
+error StartTimePassed();
+error DepositAmountTooLow();
+
 
 contract Vester {
     // State variables
@@ -31,6 +34,9 @@ contract Vester {
     event WithdrawFromStream(uint256 streamId, address user, uint256 amount);
     // Functions
     function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public {
+        if(block.timestamp < startTime) revert StartTimePassed();
+        if(depositAmount <= 0) revert DepositAmountTooLow();
+
         uint256 streamId = nextStreamId;
         nextStreamId = nextStreamId + 1;
         uint duration = (endTime - startTime);
