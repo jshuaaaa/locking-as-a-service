@@ -119,7 +119,7 @@ describe("Vester unit tests", function() {
       user = (await getNamedAccounts()).user
       startTime = 100
       endTime = 1000
-      depositAmount = "100000"
+      depositAmount = 100000
 
       const approve = await token.approve(vester.address, depositAmount)
       const approveReciept = await approve.wait(1)
@@ -147,6 +147,16 @@ describe("Vester unit tests", function() {
     const withdrawReciept = await withdraw.wait(1)
     const tokenBalance = await token.balanceOf(user)
     assert.equal(tokenBalance.toString(), "1")
+  })
+
+  it("After withdrawing substracts the amount of tokens vested left", async function() {
+    const getUser = await ethers.getSigner(user)
+    const connectedUser = vester.connect(getUser)
+    const withdraw = await connectedUser.withdrawFromStream(1,1)
+    const withdrawReciept = await withdraw.wait(1)
+
+    const viewStream = await vester.viewStream("1")
+    assert.equal(viewStream.balance.toString(), (depositAmount - 1).toString())
   })
 
 })

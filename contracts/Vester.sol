@@ -27,6 +27,7 @@ contract Vester {
         uint256 endTime;
         address tokenAddress;
         uint256 ratesPerSecond;
+        uint256 balance;
     }
 
     mapping(uint256 => Stream) private streams;
@@ -51,7 +52,8 @@ contract Vester {
             startTime: startTime,
             endTime: endTime,
             tokenAddress: tokenAddress,
-            ratesPerSecond: ratesPerSecond
+            ratesPerSecond: ratesPerSecond,
+            balance: depositAmount
         });
         emit StreamCreated(streamId);  
         IERC20(tokenAddress).transferFrom(msg.sender, address(this), depositAmount);
@@ -64,6 +66,7 @@ contract Vester {
         if(amount > balance) revert RedeemableBalanceIsLowerThenAmount();
         if(amount <= 0) revert AmountIsZero();
 
+        streams[streamId].balance = (stream.depositAmount - amount);
         IERC20(stream.tokenAddress).transfer(stream.user, amount);
         emit WithdrawFromStream(streamId, stream.user, amount);
 
@@ -97,7 +100,8 @@ contract Vester {
         uint256 startTime,
         uint256 endTime,
         address tokenAddress,
-        uint256 ratesPerSecond) {
+        uint256 ratesPerSecond,
+        uint256 balance) {
         
         user = streams[streamId].user;
         sender = streams[streamId].sender;
@@ -106,6 +110,7 @@ contract Vester {
         endTime = streams[streamId].endTime;
         tokenAddress = streams[streamId].tokenAddress;
         ratesPerSecond = streams[streamId].ratesPerSecond;
+        balance = streams[streamId].balance;
     }
 
 
