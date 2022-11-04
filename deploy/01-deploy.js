@@ -15,7 +15,7 @@ module.exports = async (hre) => {
     console.log("deploying")
     const LZEndpointMock = await deploy("LZEndpointMock", {
       from: deployer,
-      args: [100],
+      args: [1],
       log: true,
       waitConfirmations: network.config.blockConfirmations || 1
     })

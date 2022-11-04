@@ -1,4 +1,5 @@
 const { await, expect, assert } = require("chai");
+const { AbiCoder } = require("ethers/lib/utils");
 const { network, deployments, ethers, getNamedAccounts } = require("hardhat")
 
 describe("Vester unit tests", function() {
@@ -173,5 +174,27 @@ describe("Vester unit tests", function() {
     assert.equal(balance.toNumber(), depositAmount)
   })
 
-})
+  })
+
+  describe("LayerZero Send and Recieve Messages", function() {
+    let vester, lzEndpoint, gasLimit
+    beforeEach(async function() {
+      vester = await ethers.getContract("Vester", deployer)
+      lzEndpoint = await ethers.getContract("LZEndpointMock", deployer)
+      const setDestination1 = await lzEndpoint.setDestLzEndpoint(vester.address, lzEndpoint.address)
+      
+      const rec = await setDestination1.wait(1)
+      const setTrustedRemoteAddr = await vester.setTrustedRemoteAddress(1, vester.address)
+      
+      const encodedPath = ethers.utils.solidityPack(["address", "address"], [vester.address, vester.address])
+      const setTrustedRemote = await vester.setTrustedRemote(1, encodedPath)
+    })
+    it("Sends messages to the cross chain endpoint", async () => {
+      const message = await vester.sendMessage(1,deployer,1,{ value: ethers.utils.parseEther("0.1") })
+      const txnReciept = await message.wait(1)
+      const chainId = txnReciept.events[0].args.chainId
+      const LZChainId = await lzEndpoint.getChainId()
+      assert.equal(LZChainId.toString(), chainId.toString())
+    })
+  })
 })

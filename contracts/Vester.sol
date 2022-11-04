@@ -41,6 +41,7 @@ contract Vester is NonblockingLzApp {
     event StreamCreated(uint256 streamId);
     event WithdrawFromStream(uint256 streamId, address user, uint256 amount);
     event MessageRecieved(uint streamId);
+    event SentMessage(uint16 chainId);
 
 
     // Modifiers
@@ -153,6 +154,7 @@ contract Vester is NonblockingLzApp {
             adapterParams, // v1 adapterParams, specify custom destination gas qty
             msg.value
         );
+        emit SentMessage(_dstChainId);
     }
 
 
