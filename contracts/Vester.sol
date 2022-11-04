@@ -15,9 +15,10 @@ error StreamDoesntExist();
 error NoTokensLeft();
 error RateCantBeZero();
 
-contract Vester {
+contract Vester  {
     // State variables
     uint256 private nextStreamId = 1;
+
 
     struct Stream {
         uint256 streamId;
