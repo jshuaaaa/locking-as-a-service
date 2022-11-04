@@ -13,9 +13,15 @@ module.exports = async (hre) => {
     const chainId = network.config.chainId
 
     console.log("deploying")
+    const LZEndpointMock = await deploy("LZEndpointMock", {
+      from: deployer,
+      args: [100],
+      log: true,
+      waitConfirmations: network.config.blockConfirmations || 1
+    })
     const vester = await deploy("Vester", {
       from: deployer,
-      args: [],
+      args: [LZEndpointMock.address],
       log: true,
       waitConfirmations: network.config.blockConfirmations || 1
     })

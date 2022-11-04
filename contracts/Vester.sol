@@ -166,9 +166,6 @@ contract Vester is NonblockingLzApp {
 
         uint _chainId = abi.decode(_payload, (uint));
         emit MessageRecieved(_chainId);
-
-        
-
     }
 
 
