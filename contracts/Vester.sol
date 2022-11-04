@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./lzApp/NonblockingLzApp.sol";
 
+
 error EndTimeNotCompatible();
 error WithdrawAmountToLarge();
 error NotYourStream();
@@ -144,12 +145,12 @@ contract Vester is NonblockingLzApp {
     function sendMessage(uint16 _dstChainId, address, uint streamId) public payable {
         bytes memory payload = abi.encode(streamId);
         uint16 version = 1;
-        uint gasForDestinationLzReceive = 350000;
+        uint gasForDestinationLzReceive = 10;
         bytes memory adapterParams = abi.encodePacked(version, gasForDestinationLzReceive);
         _lzSend( // {value: messageFee} will be paid out of this contract!
             _dstChainId, // destination chainId
             payload, // abi.encode()'ed bytes
-            payable(address(this)), // (msg.sender will be this contract) refund address (LayerZero will refund any extra gas back to caller of send()
+            payable(msg.sender), // (msg.sender will be this contract) refund address (LayerZero will refund any extra gas back to caller of send()
             address(0x0), // future param, unused for this example
             adapterParams, // v1 adapterParams, specify custom destination gas qty
             msg.value

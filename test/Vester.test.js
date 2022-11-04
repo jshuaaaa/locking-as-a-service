@@ -1,6 +1,6 @@
 const { await, expect, assert } = require("chai");
 const { AbiCoder } = require("ethers/lib/utils");
-const { network, deployments, ethers, getNamedAccounts } = require("hardhat")
+const { network, deployments, ethers, getNamedAccounts, waffle } = require("hardhat")
 
 describe("Vester unit tests", function() {
   let deployer
@@ -177,7 +177,7 @@ describe("Vester unit tests", function() {
   })
 
   describe("LayerZero Send and Recieve Messages", function() {
-    let vester, lzEndpoint, gasLimit
+    let vester, lzEndpoint
     beforeEach(async function() {
       vester = await ethers.getContract("Vester", deployer)
       lzEndpoint = await ethers.getContract("LZEndpointMock", deployer)
@@ -185,16 +185,23 @@ describe("Vester unit tests", function() {
       
       const rec = await setDestination1.wait(1)
       const setTrustedRemoteAddr = await vester.setTrustedRemoteAddress(1, vester.address)
-      
+      const setTrustedRemoteAddr2 = await vester.setTrustedRemoteAddress(31337, vester.address)
       const encodedPath = ethers.utils.solidityPack(["address", "address"], [vester.address, vester.address])
       const setTrustedRemote = await vester.setTrustedRemote(1, encodedPath)
+      const setTrustedRemote2 = await vester.setTrustedRemote(31337, encodedPath)
     })
     it("Sends messages to the cross chain endpoint", async () => {
-      const message = await vester.sendMessage(1,deployer,1,{ value: ethers.utils.parseEther("0.1") })
+      const message = await vester.sendMessage(1,deployer,1,{ value: ethers.utils.parseEther("0.05")})
       const txnReciept = await message.wait(1)
-      const chainId = txnReciept.events[0].args.chainId
+      const chainId = txnReciept.events[1].args.chainId
       const LZChainId = await lzEndpoint.getChainId()
-      assert.equal(LZChainId.toString(), chainId.toString())
+      assert.equal(LZChainId, chainId)
     })
+
+    it("Recieves messages from cross chain endpoints", async () => {
+      expect(await vester.sendMessage(31337,deployer,1,{ value: ethers.utils.parseEther("0.05")})).to.emit(vester, "MessageRecieved")
+      
+    })
+    
   })
 })

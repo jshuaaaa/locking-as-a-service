@@ -6,6 +6,7 @@ pragma abicoder v2;
 import "../interfaces/ILayerZeroReceiver.sol";
 import "../interfaces/ILayerZeroEndpoint.sol";
 import "../libraries/LzLib.sol";
+import "hardhat/console.sol";
 
 /*
 like a real LayerZero endpoint but can be mocked, which handle message transmission, verification, and receipt.
