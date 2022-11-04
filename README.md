@@ -1,13 +1,23 @@
-# Sample Hardhat Project
+# lz-stable-streaming
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+## This is a interoperable payment streaming service built on top of LayerZero
 
-Try running some of the following tasks:
+
+## Installation
+```shell
+npm install
+```
+
+To run the unit tests
 
 ```shell
-npx hardhat help
 npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.js
 ```
+
+To deploy to your local chain
+
+```shell
+npx hardhat deploy
+```
+
+
