@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./lzApp/NonblockingLzApp.sol";
 
 error EndTimeNotCompatible();
 error WithdrawAmountToLarge();
@@ -15,7 +16,7 @@ error StreamDoesntExist();
 error NoTokensLeft();
 error RateCantBeZero();
 
-contract Vester  {
+contract Vester is NonblockingLzApp {
     // State variables
     uint256 private nextStreamId = 1;
 
@@ -34,15 +35,21 @@ contract Vester  {
     }
 
     mapping(uint256 => Stream) private streams;
+
+
     //Events
     event StreamCreated(uint256 streamId);
     event WithdrawFromStream(uint256 streamId, address user, uint256 amount);
+    event MessageRecieved(uint streamId);
+
+
     // Modifiers
     modifier StreamExists(uint256 streamId) {
         if(!streams[streamId].active) revert StreamDoesntExist();
         _;
     }
     
+    constructor(address _endpoint) NonblockingLzApp(_endpoint) {}
     
     // Functions
     function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public {
@@ -132,6 +139,38 @@ contract Vester  {
         balance = streams[streamId].balance;
         active = streams[streamId].active;
     }
+
+    function sendMessage(uint16 _dstChainId, address, uint streamId) public payable {
+        bytes memory payload = abi.encode(streamId);
+        uint16 version = 1;
+        uint gasForDestinationLzReceive = 350000;
+        bytes memory adapterParams = abi.encodePacked(version, gasForDestinationLzReceive);
+        _lzSend( // {value: messageFee} will be paid out of this contract!
+            _dstChainId, // destination chainId
+            payload, // abi.encode()'ed bytes
+            payable(address(this)), // (msg.sender will be this contract) refund address (LayerZero will refund any extra gas back to caller of send()
+            address(0x0), // future param, unused for this example
+            adapterParams, // v1 adapterParams, specify custom destination gas qty
+            msg.value
+        );
+    }
+
+
+    function _nonblockingLzReceive(
+        uint16 _srcChainId,
+        bytes memory _srcAddress,
+        uint64, /*_nonce*/
+        bytes memory _payload
+    ) internal override {
+        // When received a message decode the _payload to get chainId
+
+        uint _chainId = abi.decode(_payload, (uint));
+        emit MessageRecieved(_chainId);
+
+        
+
+    }
+
 
 
 }
