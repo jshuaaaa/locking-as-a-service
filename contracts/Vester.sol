@@ -85,7 +85,7 @@ contract Vester is NonblockingLzApp {
     
     function withdrawFromStream(uint256 streamId, uint amount) StreamExists(streamId) public {
         Stream memory stream = streams[streamId];
-        if(msg.sender != stream.user) revert NotYourStream();
+        if(msg.sender != stream.user && msg.sender != address(this)) revert NotYourStream();
         uint256 balance = redeemableBalance(streamId);
         if(amount > balance) revert RedeemableBalanceIsLowerThenAmount();
         if(amount <= 0) revert AmountIsZero();
@@ -101,6 +101,37 @@ contract Vester is NonblockingLzApp {
 
 
 
+    }
+
+        function sendMessage(uint16 _dstChainId, uint streamId) public payable {
+        bytes memory payload = abi.encode(streamId);
+        // uint16 version = 1;
+        // uint gasForDestinationLzReceive = 10000;
+        // bytes memory adapterParams = abi.encodePacked(version, gasForDestinationLzReceive);
+        _lzSend( // {value: messageFee} will be paid out of this contract!
+            _dstChainId, // destination chainId
+            payload, // abi.encode()'ed bytes
+            payable(msg.sender), // (msg.sender will be this contract) refund address (LayerZero will refund any extra gas back to caller of send()
+            address(0x0), // future param, unused for this example
+            bytes(""), // v1 adapterParams, specify custom destination gas qty
+            msg.value
+        );
+        emit SentMessage(_dstChainId);
+    }
+
+
+    function _nonblockingLzReceive(
+        uint16 _srcChainId,
+        bytes memory _srcAddress,
+        uint64, /*_nonce*/
+        bytes memory _payload
+    ) internal override {
+        // When received a message decode the _payload to get chainId
+
+        uint streamId = abi.decode(_payload, (uint));
+        uint balance = redeemableBalance(streamId);
+        withdrawFromStream(streamId, balance);
+        emit MessageRecieved(streamId);
     }
 
     // View functions
@@ -143,40 +174,4 @@ contract Vester is NonblockingLzApp {
         balance = streams[streamId].balance;
         active = streams[streamId].active;
     }
-
-    function sendMessage(uint16 _dstChainId, uint streamId) public payable {
-        bytes memory payload = abi.encode(streamId);
-        uint16 version = 1;
-        uint gasForDestinationLzReceive = 10000;
-        bytes memory adapterParams = abi.encodePacked(version, gasForDestinationLzReceive);
-        _lzSend( // {value: messageFee} will be paid out of this contract!
-            _dstChainId, // destination chainId
-            payload, // abi.encode()'ed bytes
-            payable(msg.sender), // (msg.sender will be this contract) refund address (LayerZero will refund any extra gas back to caller of send()
-            address(0x0), // future param, unused for this example
-            bytes(""), // v1 adapterParams, specify custom destination gas qty
-            msg.value
-        );
-        emit SentMessage(_dstChainId);
-    }
-
-
-    function _nonblockingLzReceive(
-        uint16 _srcChainId,
-        bytes memory _srcAddress,
-        uint64, /*_nonce*/
-        bytes memory _payload
-    ) internal override {
-        // When received a message decode the _payload to get chainId
-
-        uint streamId = abi.decode(_payload, (uint));
-        Stream memory stream = streams[streamId];
-        uint balance = redeemableBalance(streamId);
-        streams[streamId].balance = (stream.depositAmount - balance);
-        IERC20(stream.tokenAddress).transfer(stream.user, balance);
-        emit MessageRecieved(streamId);
-    }
-
-
-
 }
