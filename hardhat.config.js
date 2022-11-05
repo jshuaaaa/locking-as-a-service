@@ -1,11 +1,13 @@
-require("@nomiclabs/hardhat-waffle")
-require("@nomiclabs/hardhat-etherscan")
-require("hardhat-deploy")
-require("@nomiclabs/hardhat-ethers");
-require("hardhat-gas-reporter")
-require("hardhat-contract-sizer")
-require("dotenv").config()
+require("dotenv").config();
 
+require('hardhat-contract-sizer');
+require("@nomiclabs/hardhat-waffle");
+require(`@nomiclabs/hardhat-etherscan`);
+require("solidity-coverage");
+require('hardhat-gas-reporter');
+require('hardhat-deploy');
+require('hardhat-deploy-ethers');
+require('@openzeppelin/hardhat-upgrades');
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */

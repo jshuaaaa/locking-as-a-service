@@ -177,31 +177,62 @@ describe("Vester unit tests", function() {
   })
 
   describe("LayerZero Send and Recieve Messages", function() {
-    let vester, lzEndpoint
     beforeEach(async function() {
-      vester = await ethers.getContract("Vester", deployer)
-      lzEndpoint = await ethers.getContract("LZEndpointMock", deployer)
-      const setDestination1 = await lzEndpoint.setDestLzEndpoint(vester.address, lzEndpoint.address)
-      
-      const rec = await setDestination1.wait(1)
-      const setTrustedRemoteAddr = await vester.setTrustedRemoteAddress(1, vester.address)
-      const setTrustedRemoteAddr2 = await vester.setTrustedRemoteAddress(31337, vester.address)
-      const encodedPath = ethers.utils.solidityPack(["address", "address"], [vester.address, vester.address])
-      const setTrustedRemote = await vester.setTrustedRemote(1, encodedPath)
-      const setTrustedRemote2 = await vester.setTrustedRemote(31337, encodedPath)
-    })
-    it("Sends messages to the cross chain endpoint", async () => {
-      const message = await vester.sendMessage(1,deployer,1,{ value: ethers.utils.parseEther("0.05")})
-      const txnReciept = await message.wait(1)
-      const chainId = txnReciept.events[1].args.chainId
-      const LZChainId = await lzEndpoint.getChainId()
-      assert.equal(LZChainId, chainId)
+      this.accounts = await ethers.getSigners()
+      this.owner = this.accounts[0]
+
+        // use this chainId
+        this.chainIdSrc = 1
+        this.chainIdDst = 2
+
+        // create a LayerZero Endpoint mock for testing
+        const LZEndpointMock = await ethers.getContractFactory("LZEndpointMock")
+        this.layerZeroEndpointMockSrc = await LZEndpointMock.deploy(this.chainIdSrc)
+        this.layerZeroEndpointMockDst = await LZEndpointMock.deploy(this.chainIdDst)
+
+        // create two PingPong instances
+        const PingPong = await ethers.getContractFactory("Vester")
+        this.vesterA = await PingPong.deploy(this.layerZeroEndpointMockSrc.address)
+        this.vester2 = await PingPong.deploy(this.layerZeroEndpointMockDst.address)
+
+        this.layerZeroEndpointMockSrc.setDestLzEndpoint(this.vester2.address, this.layerZeroEndpointMockDst.address)
+        this.layerZeroEndpointMockDst.setDestLzEndpoint(this.vesterA.address, this.layerZeroEndpointMockSrc.address)
+
+        // set each contracts source address so it can send to each other
+        await this.vesterA.setTrustedRemote(
+            this.chainIdDst,
+            ethers.utils.solidityPack(["address", "address"], [this.vester2.address, this.vesterA.address])
+        ) // for A, set B
+        await this.vester2.setTrustedRemote(
+            this.chainIdSrc,
+            ethers.utils.solidityPack(["address", "address"], [this.vesterA.address, this.vester2.address])
+        ) // for B, set A
     })
 
-    it("Recieves messages from cross chain endpoints", async () => {
-      expect(await vester.sendMessage(31337,deployer,1,{ value: ethers.utils.parseEther("0.05")})).to.emit(vester, "MessageRecieved")
+    it("Recieves a message, and withdraws from the stream for the user", async function () {
+      const originalBalance = await token.balanceOf(deployer)
       
-    })
+      let startTime = 1
+      let endTime = 100
+      let depositAmount = 99
+
+      const approve = await token.approve(this.vesterA.address, depositAmount)
+      const approveReciept = await approve.wait(1)
+
+      const createStream = await this.vesterA.createStream(
+      tokenAddress,
+      deployer,
+      startTime,
+      endTime,
+      depositAmount
+    )
+    await network.provider.send("evm_increaseTime", [15000])
+    await network.provider.send("evm_mine", [])
+    await this.vester2.sendMessage(this.chainIdSrc,1, { value: ethers.utils.parseEther("0.5")})
     
+    const newBalance = await token.balanceOf(deployer)
+    assert.equal(newBalance.toString(), originalBalance.toString())     
+
+  })
   })
 })
