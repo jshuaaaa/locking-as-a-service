@@ -55,7 +55,7 @@ contract Vester is NonblockingLzApp {
     
     // Functions
     function createStream(address tokenAddress, address user, uint256 startTime, uint256 endTime, uint256 depositAmount) public {
-        if(block.timestamp < startTime) revert StartTimePassed();
+        // if(block.timestamp > startTime) revert StartTimePassed();
         if(depositAmount <= 0) revert DepositAmountTooLow();
         if(user == address(this)) revert ContractCantBeUser();
         
@@ -103,7 +103,7 @@ contract Vester is NonblockingLzApp {
 
     }
 
-        function sendMessage(uint16 _dstChainId, uint streamId) public payable {
+    function sendMessage(uint16 _dstChainId, uint streamId) public payable {
         bytes memory payload = abi.encode(streamId);
         // uint16 version = 1;
         // uint gasForDestinationLzReceive = 10000;

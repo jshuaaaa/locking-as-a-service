@@ -34,8 +34,8 @@ describe("Vester unit tests", function() {
     beforeEach(async function() {
       vester = await ethers.getContract("Vester", deployer)
       user = (await getNamedAccounts()).user
-      startTime = 1
-      endTime = 100
+      startTime = 901
+      endTime = 1000
       depositAmount = 99
     })
 
@@ -118,8 +118,8 @@ describe("Vester unit tests", function() {
     beforeEach(async function() {
       vester = await ethers.getContract("Vester", deployer)
       user = (await getNamedAccounts()).user
-      startTime = 1
-      endTime = 100
+      startTime = 901
+      endTime = 1000
       depositAmount = 99
 
       const approve = await token.approve(vester.address, depositAmount)
@@ -212,8 +212,8 @@ describe("Vester unit tests", function() {
     it("Recieves a message, and withdraws from the stream for the user", async function () {
       const originalBalance = await token.balanceOf(deployer)
       
-      let startTime = 1
-      let endTime = 100
+      let startTime = 901
+      let endTime = 1000
       let depositAmount = 99
 
       const approve = await token.approve(this.vesterA.address, depositAmount)
