@@ -35,12 +35,15 @@ module.exports = {
         goerli: {
             url: GOERLI,
             accounts: [PRIVATE_KEY],
-            //   accounts: {
-            //     mnemonic: MNEMONIC,
-            //   },
             saveDeployments: true,
             chainId: 5,
         },
+        mumbai: {
+            url: "https://polygon-testnet.public.blastapi.io",
+            accounts: [PRIVATE_KEY],
+            saveDeployments: true,
+            chainId: 80001
+        }
     },
     etherscan: {
         // yarn hardhat verify --network <NETWORK> <CONTRACT_ADDRESS> <CONSTRUCTOR_PARAMETERS>

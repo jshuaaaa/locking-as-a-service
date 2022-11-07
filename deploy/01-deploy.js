@@ -5,23 +5,21 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const {network, ethers} = require("hardhat")
+const { networkConfig } = require("../helper-hardhat")
+const { verify } = require("../utils/verify")
 
 module.exports = async (hre) => {
     const { getNamedAccounts, deployments } = hre;
     const { deploy, log } = deployments;
     const {deployer} = await getNamedAccounts();
     const chainId = network.config.chainId
-
+    
+    let LZEndpoint
     console.log("deploying")
-    const LZEndpointMock = await deploy("LZEndpointMock", {
+    if(chainId == 31337) {
+    LZEndpoint = await deploy("LZEndpointMock", {
       from: deployer,
       args: [1],
-      log: true,
-      waitConfirmations: network.config.blockConfirmations || 1
-    })
-    const vester = await deploy("Vester", {
-      from: deployer,
-      args: [LZEndpointMock.address],
       log: true,
       waitConfirmations: network.config.blockConfirmations || 1
     })
@@ -32,8 +30,23 @@ module.exports = async (hre) => {
       log: true,
       waitConfirmations: network.config.blockConfirmations || 1
     })
+  } else {
+    LZEndpoint = networkConfig[chainId]["LZEndpoint"]
+  }
 
-    console.log(`Deployed succesfully to${vester.address}`)
+  const vester = await deploy("Vester", {
+    from: deployer,
+    args: [LZEndpoint.address],
+    log: true,
+    waitConfirmations: network.config.blockConfirmations || 1
+  })
+
+
+  if(chainId != 31337 && process.env.ETHERSCAN) {
+    await verify(vester.address, LZEndpoint.address)
+  }
+
+  console.log(`Deployed succesfully to${vester.address}`)
 }
 
 // We recommend this pattern to be able to use async/await everywhere
