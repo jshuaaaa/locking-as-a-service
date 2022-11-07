@@ -18,6 +18,7 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY || "0x"
 // Your API key for Etherscan, obtain one at https://etherscan.io/
 const ETHERSCAN = process.env.ETHERSCAN || "Your etherscan API key"
 const REPORT_GAS = process.env.REPORT_GAS || false
+const POLYGONSCAN = process.env.POLYGONSCAN || ""
 
 module.exports = {
     defaultNetwork: "hardhat",
@@ -49,7 +50,18 @@ module.exports = {
         // yarn hardhat verify --network <NETWORK> <CONTRACT_ADDRESS> <CONSTRUCTOR_PARAMETERS>
         apiKey: {
             goerli: ETHERSCAN,
+            polygonMumbai: POLYGONSCAN
         },
+        customChains: [
+            {
+              network: "polygonMumbai",
+              chainId: 80001,
+              urls: {
+                apiURL: "https://api-testnet.polygonscan.com",
+                browserURL: "https://mumbai.polygonscan.com"
+              }
+            }
+          ]
     },
     gasReporter: {
         enabled: REPORT_GAS,

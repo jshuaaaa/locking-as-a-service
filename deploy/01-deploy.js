@@ -17,12 +17,13 @@ module.exports = async (hre) => {
     let LZEndpoint
     console.log("deploying")
     if(chainId == 31337) {
-    LZEndpoint = await deploy("LZEndpointMock", {
+    const LZEndpointDep = await deploy("LZEndpointMock", {
       from: deployer,
       args: [1],
       log: true,
       waitConfirmations: network.config.blockConfirmations || 1
     })
+    LZEndpoint = LZEndpointDep.address
 
     const token = await deploy("Token", {
       from: deployer,
@@ -36,14 +37,14 @@ module.exports = async (hre) => {
 
   const vester = await deploy("Vester", {
     from: deployer,
-    args: [LZEndpoint.address],
+    args: [LZEndpoint],
     log: true,
     waitConfirmations: network.config.blockConfirmations || 1
   })
 
 
   if(chainId != 31337 && process.env.ETHERSCAN) {
-    await verify(vester.address, LZEndpoint.address)
+    await verify(vester.address, [LZEndpoint])
   }
 
   console.log(`Deployed succesfully to${vester.address}`)
